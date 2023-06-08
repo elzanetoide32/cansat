@@ -1,6 +1,6 @@
 #include <DHT.h>
 
-#define DHTPIN 2        // Pin connected to the DHT sensor
+#define DHTPIN 17        // Pin connected to the DHT sensor
 #define DHTTYPE DHT11   // DHT sensor type
 
 DHT dht(DHTPIN, DHTTYPE);
@@ -22,5 +22,4 @@ void loop() {
   Serial.print(dht.readHumidity());
   Serial.println(" %");
   
-  Serial.println("------------------");
 }
