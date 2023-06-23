@@ -24,7 +24,6 @@
 
 String packSize = "--";
 String packet ;
-
 void logo(){
   Heltec.display->clear();
   Heltec.display->drawXbm(0,5,logo_width,logo_height,logo_bits);
@@ -35,16 +34,19 @@ void LoRaData(){
   Heltec.display->clear();
   Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
   Heltec.display->setFont(ArialMT_Plain_10);
-  Heltec.display->drawStringMaxWidth(0 ,0,128, packet);
+  Heltec.display->drawStringMaxWidth(0,0, 128, packet);//(x,y,width)  
   Heltec.display->display();
+  Serial.println(packet);
 }
 
 void cbk(int packetSize) {
   packet ="";
   packSize = String(packetSize,DEC);
-  for (int i = 0; i < packetSize; i++) { packet += (char) LoRa.read(); }
-
+  for (int i = 0; i < packetSize; i++) { 
+    packet += (char) LoRa.read();    
+    }    
   LoRaData();
+
 }
 
 void setup() { 
@@ -68,6 +70,7 @@ void setup() {
 
 void loop() {
   int packetSize = LoRa.parsePacket();
-  if (packetSize) { cbk(packetSize);  }
+  if (packetSize) { 
+    cbk(packetSize);  }
   delay(10);
 }
