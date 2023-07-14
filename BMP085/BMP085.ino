@@ -58,7 +58,7 @@ void loop() {
   // vary with weather and such. If it is 1015 millibars
   // that is equal to 101500 Pascals.
     Serial.print("Real altitude = ");
-    Serial.print(bmp.readAltitude(101500));
+    Serial.print(bmp.readAltitude(101000));
     Serial.println(" meters");
     
     Serial.println();

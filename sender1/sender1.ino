@@ -1,8 +1,17 @@
+//Libraries for LoRa
+#include <SPI.h>
+#include <LoRa.h>
+
+//Libraries for OLED Display
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <Adafruit_BMP085.h>
-#include <Wire.h>
+
 #define DHTPIN 17        // Pin connected to the DHT sensor
 #define DHTTYPE DHT11   // DHT sensor type
 const int sensorPin = 2; // mq7
@@ -10,74 +19,69 @@ const int sensorPin2 = 13; //mq4
 DHT dht(DHTPIN, DHTTYPE);
 Adafruit_BMP085 bmp;
 Adafruit_MPU6050 mpu;
+
+//define the pins used by the LoRa transceiver module
+#define SCK 5
+#define MISO 19
+#define MOSI 27
+#define SS 18
+#define RST 14
+#define DIO0 26
+
+//433E6 for Asia
+//866E6 for Europe
+//915E6 for North America
+#define BAND 433E6
+
+//OLED pins
+#define OLED_SDA 4
+#define OLED_SCL 15 
+#define OLED_RST 16
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+
+//contador de tiempo
+int counter=0;
+
+//creacion de pantalla (objeto display)
+//Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
+
+//funciones
+/*
+void envia_oled(){
+  display.clearDisplay();
+  display.setCursor(0,30);
+  display.print("Contador: ");
+  display.setCursor(60,30);
+  display.print(counter);      
+  display.display();
+}
+*/
+
 void setup() {
-  Serial.begin(9600);
-  Serial.println("DHT11 Sensor Test");
+  //Serial.println("DHT11 Sensor Test");
   dht.begin();
   if (!bmp.begin()) {
   Serial.println("Could not find a valid BMP085 sensor, check wiring!");
   while (1) {}
   }
- 
-  mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
-  Serial.print("Accelerometer range set to: ");
-  switch (mpu.getAccelerometerRange()) {
-  case MPU6050_RANGE_2_G:
-    Serial.println("+-2G");
-    break;
-  case MPU6050_RANGE_4_G:
-    Serial.println("+-4G");
-    break;
-  case MPU6050_RANGE_8_G:
-    Serial.println("+-8G");
-    break;
-  case MPU6050_RANGE_16_G:
-    Serial.println("+-16G");
-    break;
-  }
-  mpu.setGyroRange(MPU6050_RANGE_500_DEG);
-  Serial.print("Gyro range set to: ");
-  switch (mpu.getGyroRange()) {
-  case MPU6050_RANGE_250_DEG:
-    Serial.println("+- 250 deg/s");
-    break;
-  case MPU6050_RANGE_500_DEG:
-    Serial.println("+- 500 deg/s");
-    break;
-  case MPU6050_RANGE_1000_DEG:
-    Serial.println("+- 1000 deg/s");
-    break;
-  case MPU6050_RANGE_2000_DEG:
-    Serial.println("+- 2000 deg/s");
-    break;
-  }
-
-  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
-  Serial.print("Filter bandwidth set to: ");
-  switch (mpu.getFilterBandwidth()) {
-  case MPU6050_BAND_260_HZ:
-    Serial.println("260 Hz");
-    break;
-  case MPU6050_BAND_184_HZ:
-    Serial.println("184 Hz");
-    break;
-  case MPU6050_BAND_94_HZ:
-    Serial.println("94 Hz");
-    break;
-  case MPU6050_BAND_44_HZ:
-    Serial.println("44 Hz");
-    break;
-  case MPU6050_BAND_21_HZ:
-    Serial.println("21 Hz");
-    break;
-  case MPU6050_BAND_10_HZ:
-    Serial.println("10 Hz");
-    break;
-  case MPU6050_BAND_5_HZ:
-    Serial.println("5 Hz");
-    break;
-  }
-
+   
+  /*initialize Serial Monitor*/
+  Serial.begin(115200);
+   //SPI LoRa pins
+  SPI.begin(SCK, MISO, MOSI, SS);
+  //setup LoRa transceiver module
+  LoRa.setPins(SS, RST, DIO0);
+  
+  if (!LoRa.begin(BAND)) {
+    while (1);
+  }/*
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.print("LORA SENDER ");
+  display.display();*/
   Serial.println("");
   delay(100);
 }
@@ -91,10 +95,11 @@ void loop() {
   // Convert the voltage to gas concentration using a conversion factor
   float gasConcentration = voltage * 100; // Example conversion factor, adjust as per sensor calibration
   float gasConcentration2 = voltage2 * 100; 
-  sensors_event_t a, g, temp;
-  mpu.getEvent(&a, &g, &temp);
+ // sensors_event_t a, g, temp;
+//  mpu.getEvent(&a, &g, &temp);
   
-  delay(20);  // Wait for 2 seconds between measurements
+  delay(200); 
+  
   /*Serial.println("***************");  
   Serial.print("Temperatura: ");
   Serial.print(dht.readTemperature());
@@ -160,28 +165,30 @@ void loop() {
   Serial.print(temp.temperature);
   Serial.println(" degC");
   Serial.print("********************");*/
-  Serial.print("/*");
-  Serial.print(dht.readTemperature());
-  Serial.print(",");
-  Serial.print(dht.readHumidity());
-  Serial.print(",");
-  Serial.print(bmp.readPressure());
-  Serial.print(",");
-  Serial.print(bmp.readAltitude());
-  Serial.print(",");
-  Serial.print(sensorValue);
-  Serial.print(",");
-  Serial.print(voltage);
-  Serial.print(",");
-  Serial.print(gasConcentration);
-  Serial.print(",");
-  Serial.print(sensorValue2);
-  Serial.print(",");
-  Serial.print(voltage2);
-  Serial.print(",");
-  Serial.print(gasConcentration2);
-  Serial.print(",");
-  Serial.print("*/");
-  Serial.println();
-  
+  ////se envian en formato (/*temperatura,humedad,presion,altura,(valores del mq7),(valores mq4))*/
+  LoRa.beginPacket();
+  LoRa.print("/*");
+  LoRa.print(dht.readTemperature());
+  LoRa.print(",");
+  LoRa.print(dht.readHumidity());
+  LoRa.print(",");
+  LoRa.print(bmp.readPressure());
+  LoRa.print(",");
+  LoRa.print(bmp.readAltitude());
+  LoRa.print(",");
+  LoRa.print(sensorValue);
+  LoRa.print(",");
+  LoRa.print(voltage);
+  LoRa.print(",");
+  LoRa.print(gasConcentration);
+  LoRa.print(",");
+  LoRa.print(sensorValue2);
+  LoRa.print(",");
+  LoRa.print(voltage2);
+  LoRa.print(",");
+  LoRa.print(gasConcentration2);
+  LoRa.print(",");
+  LoRa.print("*/");
+  LoRa.println();
+  LoRa.endPacket();
 }
